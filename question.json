@@ -1,0 +1,20 @@
+{
+		"model": "google/gemma-3n-E4B-it",
+		"messages": [
+			{
+				"role": "user",
+				"content": [
+					{
+						"type": "text",
+						"text": "What objects are there in this image?"
+					},
+					{
+						"type": "image_url",
+						"image_url": {
+							"url": "file:marvin-512.png"
+						}
+					}
+				]
+			}
+		]
+	}
