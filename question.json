@@ -6,12 +6,12 @@
 				"content": [
 					{
 						"type": "text",
-						"text": "What objects are there in this image?"
+						"text": "Describe this image?"
 					},
 					{
 						"type": "image_url",
 						"image_url": {
-							"url": "file:marvin-512.png"
+							"url": "file:data/marvin-512.png"
 						}
 					}
 				]

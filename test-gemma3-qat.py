@@ -1,14 +1,12 @@
 import threading
 import time
 import torch
-from transformers import AutoProcessor, Gemma3nForConditionalGeneration, AutoTokenizer
+from transformers import AutoProcessor, AutoTokenizer, AutoModelForImageTextToText, BitsAndBytesConfig
 
 # ------------------------------------------------------
 # CONFIGURATION
 # ------------------------------------------------------
-MODEL_ID = "google/gemma-3n-e4b-it"
-# MODEL_ID = "unsloth/gemma-3n-E4B-it-unsloth-bnb-4bit"
-# MODEL_ID = "BernTheCreator/Gemma-3n-E4B-it-Q4_0-GGUF"
+MODEL_ID = "google/gemma-3-12b-it-qat-q4_0-unquantized"
 
 # ------------------------------------------------------
 # MODEL SINGLETON (load once, reuse)
@@ -19,15 +17,17 @@ _processor = None
 _tokenizer = None
 _model_lock = threading.Lock()
 
+
 def get_model_and_processor():
     global _model, _processor, _tokenizer
     with _model_lock:
         if _model is None or _processor is None:
+            quantization_config = BitsAndBytesConfig(load_in_8bit=True)
             _processor = AutoProcessor.from_pretrained(MODEL_ID)
             _tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
             _model = (
-                Gemma3nForConditionalGeneration
-                .from_pretrained(MODEL_ID, device_map="auto", dtype="auto")
+                AutoModelForImageTextToText
+                .from_pretrained(MODEL_ID, device_map="auto", quantization_config=quantization_config)
                 .eval()
             )
             # _model = torch.compile(_model, mode="max-autotune")
@@ -74,6 +74,7 @@ def run_request(request):
     print(f"{duration:.1f}s {words/duration:.1f}w/s  >>>" + response)
 
 def test():
+
     run_request([
                 {"type": "text", "text": "Write a short poem about pelicans"}
             ])
@@ -85,9 +86,9 @@ def test():
                 {"type": "text", "text": "This is an image from your camera, what do you see?"},
                 {"type": "image", "image": "data/marvin-256.png"},
             ])
-    run_request([
-                {"type": "text", "text": "Transcribe this audio"},
-                {"type": "audio", "audio": "data/JFKmoonspeech.mp3"},
-            ])
-
+    # run_request([
+    #             {"type": "text", "text": "Transcribe this audio"},
+    #             {"type": "audio", "audio": "data/JFKmoonspeech.mp3"},
+    #         ])
+    
 test()

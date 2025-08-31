@@ -19,6 +19,29 @@ _processor = None
 _tokenizer = None
 _model_lock = threading.Lock()
 
+def get_current_temperature(location: str, unit: str):
+    """
+    Get the current temperature at a location.
+    
+    Args:
+        location: The location to get the temperature for, in the format "City, Country"
+        unit: The unit to return the temperature in. (choices: ["celsius", "fahrenheit"])
+    """
+    print("Get temperature tool called")
+    return 42.  # A real function should probably actually get the temperature!
+
+def get_current_wind_speed(location: str):
+    """
+    Get the current wind speed in km/h at a given location.
+    
+    Args:
+        location: The location to get the wind speed for, in the format "City, Country"
+    """
+    print("Get wind tool called")
+    return 6.  # A real function should probably actually get the wind speed!
+
+tools = [get_current_temperature, get_current_wind_speed]
+
 def get_model_and_processor():
     global _model, _processor, _tokenizer
     with _model_lock:
@@ -34,7 +57,7 @@ def get_model_and_processor():
         return _model, _processor, _tokenizer
     
 def run_request(request):
-    model, processor, _tokenizer = get_model_and_processor()
+    model, processor, tokenizer = get_model_and_processor()
     start = time.time()
     messages = [
         {
@@ -49,20 +72,21 @@ def run_request(request):
         }
     ]
 
-    inputs = processor.apply_chat_template(
+    inputs = tokenizer.apply_chat_template(
         messages,
+        tools = tools,
         add_generation_prompt=True,
         tokenize=True,
         return_dict=True,
         return_tensors="pt",
     )
-    inputs = inputs.to(model.device, dtype=model.dtype)
+    inputs = inputs.to(model.device)
 
     with torch.inference_mode():
         generation = model.generate(
             **inputs, max_new_tokens=128, disable_compile=True,
         )
-
+    print(tokenizer.decode(generation[0][len(inputs["input_ids"][0]):]))
     input_len = inputs["input_ids"].shape[-1]
     response = processor.decode(
         generation[0][input_len:], skip_special_tokens=True
@@ -75,19 +99,7 @@ def run_request(request):
 
 def test():
     run_request([
-                {"type": "text", "text": "Write a short poem about pelicans"}
-            ])
-    run_request([
-                {"type": "text", "text": "This is an image from your camera, what do you see?"},
-                {"type": "image", "image": "data/marvin-512.png"},
-            ])
-    run_request([
-                {"type": "text", "text": "This is an image from your camera, what do you see?"},
-                {"type": "image", "image": "data/marvin-256.png"},
-            ])
-    run_request([
-                {"type": "text", "text": "Transcribe this audio"},
-                {"type": "audio", "audio": "data/JFKmoonspeech.mp3"},
-            ])
+            {"type": "text", "text": "Using the supplied tools, what is the temperature in paris?"}
+        ])
 
 test()
