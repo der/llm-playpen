@@ -15,11 +15,15 @@ def test_yolo_world():
     results = model.predict("data/marvin-512.png")
     results[0].show()
 
-def test_yoloe():
-    model = YOLOE("yoloe-11l-seg.pt")  # or select yoloe-11s/m-seg.pt for different sizes
+def prep_ncnn():
+    model = YOLOE("yoloe-v8s-seg.pt")  # or select yoloe-11s/m-seg.pt for different sizes
     # Set text prompt. You only need to do this once after you load the model.
     model.set_classes(classes, model.get_text_pe(classes))
-    results = model.predict("data/marvin-512.png")
+    model.export(format="ncnn")
+
+def test_yoloe():
+    ncnn_model = YOLO("yoloe-v8s-seg_ncnn_model")
+    results = ncnn_model.predict("data/marvin-512.png")
     results[0].show()
 
 def get_image():
@@ -34,19 +38,23 @@ def get_image():
         print(f"Error processing image: {e}")
 
 def test_loop():
-    model = YOLOE("yoloe-11l-seg.pt")  # or select yoloe-11s/m-seg.pt for different sizes
-    model.set_classes(classes, model.get_text_pe(classes))
+    model = YOLO("yoloe-v8s-seg_ncnn_model")
+#    model.set_classes(classes, model.get_text_pe(classes))
     window_name = "YOLO-E Test Loop"
     cv2.namedWindow(window_name)
     cv2.waitKey(10)
     while(True):
         image = get_image()
         print("calling predict")
+        # Drop the second arg to spot anything in the list
         results = model.predict(image, classes=[1])
         print("Results: {results}")
         annotated_frame = results[0].plot()
         cv2.imshow(window_name, annotated_frame)
         cv2.waitKey(10)
-        time.sleep(.5)
 
+#prep_ncnn()
+#test_yoloe()
 test_loop()
+
+
