@@ -4,6 +4,7 @@ import cv2
 import requests
 from io import BytesIO
 from PIL import Image
+import time
 
 classes = ["person", "teddy bear", "book", "bookshelf", "chair", "door", "doorframe", "windowed door", "stool", "pc", "sofa", "table", "tv"]
 url = "http://marvin.local:8080/still"
@@ -41,9 +42,11 @@ def test_loop():
     while(True):
         image = get_image()
         print("calling predict")
-        results = model.predict(image)
+        results = model.predict(image, classes=[1])
+        print("Results: {results}")
         annotated_frame = results[0].plot()
         cv2.imshow(window_name, annotated_frame)
         cv2.waitKey(10)
-        
+        time.sleep(.5)
+
 test_loop()
