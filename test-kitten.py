@@ -8,3 +8,6 @@ audio = m.generate("I'm afraid I can't do that Dave. Approach bear with caution!
 # Save the audio
 import soundfile as sf
 sf.write('output.wav', audio, 24000)
+import sounddevice as sd
+import soundfile as sf
+sd.play(audio, 24000)
